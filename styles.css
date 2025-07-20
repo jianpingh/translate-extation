@@ -1,15 +1,15 @@
-/* Felo-style Audio Transcript Overlay - Fixed Dimensions */
+/* Dark Transparent Audio Transcript Overlay - Fixed Dimensions */
 .transcript-overlay {
     position: fixed;
     top: 50px;
     right: 20px;
-    width: 400px !important;  /* Fixed width like Felo */
-    height: 300px !important; /* Fixed height like Felo */
-    background: rgba(255, 255, 255, 0.95);
+    width: 400px !important;  /* Fixed width */
+    height: 650px !important; /* Further increased height */
+    background: rgba(0, 0, 0, 0.75);  /* More transparent background */
     backdrop-filter: blur(20px);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     z-index: 10000;
     overflow: hidden;
@@ -17,10 +17,11 @@
     display: flex;
     flex-direction: column;
     resize: none; /* Disable resizing for fixed dimensions */
+    color: white; /* White text */
 }
 
 .transcript-overlay:hover {
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
     transform: translateY(-2px);
 }
 
@@ -29,7 +30,7 @@
 }
 
 .transcript-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(51, 51, 51, 0.9) 100%);
     color: white;
     padding: 12px 16px;
     font-size: 13px;
@@ -41,6 +42,7 @@
     align-items: center;
     user-select: none;
     flex-shrink: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .transcript-title {
@@ -73,19 +75,20 @@
     flex: 1;
     padding: 16px;
     overflow-y: auto;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.1);  /* Very light transparent background */
     font-size: 14px;
     line-height: 1.5;
     display: flex;
     flex-direction: column;
+    color: white; /* White text */
 }
 
 .transcript-status {
     font-size: 12px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.8);  /* Light white text */
     margin-bottom: 8px;
     padding: 6px 12px;
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.75);  /* Same transparent background */
     border-radius: 6px;
     text-align: center;
     font-weight: 500;
@@ -94,10 +97,12 @@
 .transcript-text-container {
     flex: 1;
     overflow-y: auto;
+    scroll-behavior: smooth; /* Smooth scrolling */
+    padding-bottom: 10px; /* Extra space at bottom */
 }
 
 .transcript-text {
-    color: #333;
+    color: white;  /* White text */
     background: transparent;
     border: none;
     width: 100%;
@@ -113,14 +118,15 @@
 .transcript-item {
     margin-bottom: 12px;
     padding: 8px 12px;
-    background: rgba(247, 250, 252, 0.8);
+    background: rgba(0, 0, 0, 0.75);  /* Same transparent background */
     border-radius: 8px;
-    border-left: 3px solid #667eea;
+    border-left: none;  /* Remove left border decoration */
     animation: fadeInUp 0.3s ease-out;
+    color: white;  /* White text */
 }
 
 .transcript-item:hover {
-    background: rgba(247, 250, 252, 1);
+    background: rgba(0, 0, 0, 0.85);  /* Slightly darker on hover */
 }
 
 @keyframes fadeInUp {
@@ -136,48 +142,52 @@
 
 .transcript-timestamp {
     font-size: 11px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.6);  /* Light white text */
     margin-bottom: 4px;
     font-weight: 500;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.75);  /* Same transparent background */
+    border-radius: 4px;
+    display: inline-block;
 }
 
 .final-text {
-    color: #333;
+    color: white;  /* White text */
     margin-bottom: 8px;
     padding: 6px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     word-wrap: break-word;
 }
 
 .interim-text {
-    color: #999;
-    font-style: italic;
-    opacity: 0.8;
+    color: white;  /* Full white text like final text */
+    font-style: normal;  /* Remove italic */
+    opacity: 1;  /* Full opacity */
     animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 0.9; }
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling for dark theme */
 .transcript-content::-webkit-scrollbar {
     width: 6px;
 }
 
 .transcript-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 3px;
 }
 
 .transcript-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 3px;
 }
 
 .transcript-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.5);
 }
 
 /* Animation */
@@ -200,7 +210,7 @@
 @media (max-width: 768px) {
     .transcript-overlay {
         width: 320px !important;
-        height: 250px !important;
+        height: 500px !important;  /* Increased mobile height */
         right: 10px;
         top: 10px;
     }
@@ -209,7 +219,7 @@
 @media (max-width: 480px) {
     .transcript-overlay {
         width: 280px !important;
-        height: 220px !important;
+        height: 450px !important;  /* Increased small mobile height */
         right: 5px;
         top: 5px;
     }

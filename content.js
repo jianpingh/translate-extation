@@ -67,7 +67,7 @@
             
             // Create and show transcript overlay first
             createTranscriptOverlay();
-            showStatus('Initializing...');
+            showStatus('Ready');
             
             // Create speech recognition instance
             recognition = new SpeechRecognition();
@@ -97,13 +97,7 @@
                     }
                 }
                 
-                // Display interim results (real-time feedback)
-                if (interimTranscript) {
-                    console.log('Interim transcript:', interimTranscript);
-                    updateInterimTranscript(interimTranscript);
-                }
-                
-                // Process final results
+                // Process final results first to avoid flickering
                 if (finalTranscript) {
                     console.log('Final transcript:', finalTranscript);
                     addFinalTranscript(finalTranscript);
@@ -117,6 +111,10 @@
                         // Popup might be closed, ignore error
                         console.log('Popup not available for message');
                     });
+                } else if (interimTranscript) {
+                    // Only show interim results if no final results
+                    console.log('Interim transcript:', interimTranscript);
+                    updateInterimTranscript(interimTranscript);
                 }
             };
             
@@ -124,7 +122,7 @@
             recognition.onstart = function() {
                 console.log('Speech recognition started successfully');
                 isRecording = true;
-                showStatus('Listening...');
+                showStatus('Ready');
             };
             
             // Listen for errors
@@ -217,7 +215,7 @@
                 <button class="transcript-close">×</button>
             </div>
             <div class="transcript-content">
-                <div class="transcript-status">Ready to start...</div>
+                <div class="transcript-status" style="display: none;"></div>
                 <div class="transcript-text-container"></div>
             </div>
         `;
@@ -320,8 +318,14 @@
         
         const statusElement = transcriptOverlay.querySelector('.transcript-status');
         if (statusElement) {
-            statusElement.textContent = message;
-            statusElement.style.color = message.includes('Error') ? '#f44336' : '#4CAF50';
+            // Hide status element when ready, only show errors
+            if (message === 'Ready' || message === 'Listening...' || message === 'Initializing...') {
+                statusElement.style.display = 'none';
+            } else {
+                statusElement.style.display = 'block';
+                statusElement.textContent = message;
+                statusElement.style.color = message.includes('Error') ? '#f44336' : '#4CAF50';
+            }
         }
         console.log('Status updated:', message);
     }
@@ -333,28 +337,41 @@
         const container = transcriptOverlay.querySelector('.transcript-text-container');
         if (!container) return;
         
-        // Remove previous interim element
-        const oldInterim = container.querySelector('.transcript-interim');
-        if (oldInterim) {
-            oldInterim.remove();
-        }
+        // Find or create interim element
+        let interimDiv = container.querySelector('.transcript-interim');
         
-        // Add new interim element
-        if (text.trim()) {
-            const interimDiv = document.createElement('div');
+        if (!interimDiv) {
+            // Create new interim element
+            interimDiv = document.createElement('div');
             interimDiv.className = 'transcript-interim';
-            interimDiv.textContent = 'Recognizing: ' + text;
             interimDiv.style.cssText = `
-                color: #999;
-                font-style: italic;
+                color: white;
+                font-style: normal;
                 padding: 8px 12px;
-                background: rgba(255, 193, 7, 0.1);
+                background: rgba(0, 0, 0, 0.75);
                 border-radius: 6px;
-                border-left: 2px solid #ffc107;
                 margin-bottom: 8px;
                 animation: pulse 1.5s infinite;
+                transition: all 0.2s ease;
+                min-height: 20px;
             `;
             container.appendChild(interimDiv);
+            
+            // Auto scroll to bottom smoothly when new interim appears
+            setTimeout(() => {
+                container.scrollTo({
+                    top: container.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 50);
+        }
+        
+        // Update text content smoothly
+        if (text.trim()) {
+            interimDiv.textContent = text;
+            interimDiv.style.opacity = '1';
+        } else {
+            interimDiv.style.opacity = '0.5';
         }
         
         console.log('Interim transcript updated:', text);
@@ -367,10 +384,17 @@
         const container = transcriptOverlay.querySelector('.transcript-text-container');
         if (!container) return;
         
-        // Remove interim text
+        // Remove interim text smoothly
         const interimDiv = container.querySelector('.transcript-interim');
         if (interimDiv) {
-            interimDiv.remove();
+            // Fade out interim text before removing
+            interimDiv.style.opacity = '0';
+            interimDiv.style.transition = 'opacity 0.2s ease';
+            setTimeout(() => {
+                if (interimDiv.parentNode) {
+                    interimDiv.remove();
+                }
+            }, 200);
         }
         
         // Add final text with timestamp
@@ -384,21 +408,44 @@
         finalDiv.style.cssText = `
             margin-bottom: 12px;
             padding: 10px 12px;
-            background: rgba(247, 250, 252, 0.8);
+            background: rgba(0, 0, 0, 0.75);
             border-radius: 8px;
-            border-left: 3px solid #667eea;
             animation: fadeInUp 0.3s ease-out;
+            color: white;
+            opacity: 0;
+            transform: translateY(10px);
         `;
         
         container.appendChild(finalDiv);
         
-        // Auto scroll to bottom
-        container.scrollTop = container.scrollHeight;
+        // Animate in the final text
+        requestAnimationFrame(() => {
+            finalDiv.style.opacity = '1';
+            finalDiv.style.transform = 'translateY(0)';
+            finalDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        });
+        
+        // Auto scroll to bottom smoothly
+        setTimeout(() => {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 100);
         
         // Limit number of items to prevent memory issues
         const items = container.querySelectorAll('.transcript-item');
-        if (items.length > 20) {
-            items[0].remove();
+        if (items.length > 25) {
+            // Remove oldest items with fade out
+            const oldestItem = items[0];
+            oldestItem.style.opacity = '0';
+            oldestItem.style.transform = 'translateY(-10px)';
+            oldestItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            setTimeout(() => {
+                if (oldestItem.parentNode) {
+                    oldestItem.remove();
+                }
+            }, 300);
         }
         
         console.log('Final transcript added:', text);

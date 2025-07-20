@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition Test - No Status Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #ffeb3b;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        video {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .feature-test {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .expected {
+            background: rgba(33, 150, 243, 0.2);
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Speech Recognition Test Page</h1>
+        <p style="text-align: center; font-size: 18px;">Testing Direct Speech Display - No Status Messages</p>
+        
+        <div class="instructions">
+            <h3>📋 Test Instructions</h3>
+            <ol>
+                <li><strong>Reload Extension:</strong> Go to chrome://extensions and reload the Audio Transcription Extension</li>
+                <li><strong>Click Extension Icon:</strong> Open the extension popup and click "Start Transcription"</li>
+                <li><strong>Test Speech Recognition:</strong> Speak clearly and observe the behavior</li>
+                <li><strong>Check for Changes:</strong> Verify that the status messages are removed</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Testing Goals</h2>
+            
+            <div class="feature-test">
+                <h4>✅ No "Recognizing:" Prefix</h4>
+                <p>When you speak, the text should appear directly without the "Recognizing:" prefix.</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>✅ No "Listening..." Status</h4>
+                <p>The status bar should be hidden - no "Listening...", "Ready", or other status messages should appear.</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>✅ Direct Text Display</h4>
+                <p>Speech should be converted to text and displayed immediately in the transcript area.</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>✅ Clean Interface</h4>
+                <p>The transcription overlay should only show the header and transcript content, with no status bar visible.</p>
+            </div>
+        </div>
+
+        <div class="expected">
+            <h3>🎯 Expected Behavior</h3>
+            <ul>
+                <li><strong>No Status Messages:</strong> Status bar should be completely hidden</li>
+                <li><strong>Direct Speech Display:</strong> Spoken words appear immediately without prefixes</li>
+                <li><strong>Clean Interim Text:</strong> Temporary recognition text shows without "Recognizing:" label</li>
+                <li><strong>Smooth Transitions:</strong> Text transitions from interim to final without status interruptions</li>
+                <li><strong>Error Display Only:</strong> Status bar only appears for errors if they occur</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🗣️ Test Phrases</h2>
+            <p>Try speaking these phrases to test the recognition:</p>
+            <ul>
+                <li>"Hello world, this is a test of speech recognition"</li>
+                <li>"The weather is nice today"</li>
+                <li>"Chrome extension development is interesting"</li>
+                <li>"Real-time transcription without status messages"</li>
+            </ul>
+        </div>
+
+        <video controls muted>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <script>
+        console.log('Test page loaded - Ready for speech recognition testing');
+        
+        // Add some audio for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.querySelector('video');
+            if (video) {
+                video.volume = 0.3; // Lower volume for testing
+                console.log('Video element ready for testing');
+            }
+        });
+    </script>
+</body>
+</html>
