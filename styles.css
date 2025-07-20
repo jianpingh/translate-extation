@@ -18,6 +18,7 @@
     flex-direction: column;
     resize: none; /* Disable resizing for fixed dimensions */
     color: white; /* White text */
+    animation: slideIn 0.3s ease-out;
 }
 
 .transcript-overlay:hover {
@@ -140,17 +141,6 @@
     }
 }
 
-.transcript-timestamp {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);  /* Light white text */
-    margin-bottom: 4px;
-    font-weight: 500;
-    padding: 2px 6px;
-    background: rgba(0, 0, 0, 0.75);  /* Same transparent background */
-    border-radius: 4px;
-    display: inline-block;
-}
-
 .final-text {
     color: white;  /* White text */
     margin-bottom: 8px;
@@ -200,10 +190,6 @@
         opacity: 1;
         transform: translateX(0);
     }
-}
-
-.transcript-overlay {
-    animation: slideIn 0.3s ease-out;
 }
 
 /* Responsive adjustments for smaller screens */

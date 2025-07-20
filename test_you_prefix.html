@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition Test - You Prefix Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #ffeb3b;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        video {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .feature-test {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .expected {
+            background: rgba(33, 150, 243, 0.2);
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .comparison {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before, .after {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .before {
+            background: rgba(244, 67, 54, 0.2);
+            border-left: 4px solid #f44336;
+        }
+        .after {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+        }
+        .text-example {
+            background: rgba(0, 0, 0, 0.75);
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            color: white;
+        }
+        .timestamp-style {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 4px;
+        }
+        .you-prefix {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Speech Recognition Test - You Prefix Display</h1>
+        <p style="text-align: center; font-size: 18px;">Testing Speech Display with "You:" Prefix (No Timestamps)</p>
+        
+        <div class="instructions">
+            <h3>📋 Test Instructions</h3>
+            <ol>
+                <li><strong>Reload Extension:</strong> Go to chrome://extensions and reload the Audio Transcription Extension</li>
+                <li><strong>Click Extension Icon:</strong> Open the extension popup and click "Start Transcription"</li>
+                <li><strong>Test Speech Recognition:</strong> Speak clearly and observe the new display format</li>
+                <li><strong>Check Format:</strong> Verify that text shows "You:" prefix instead of timestamps</li>
+            </ol>
+        </div>
+
+        <div class="comparison">
+            <div class="before">
+                <h4>❌ Before (With Timestamps)</h4>
+                <div class="text-example">
+                    <div class="timestamp-style">10:30:45 PM</div>
+                    <div>Hello world, this is a test of speech recognition</div>
+                </div>
+                <div class="text-example">
+                    <div class="timestamp-style">10:30:52 PM</div>
+                    <div>Another line of transcribed text</div>
+                </div>
+                <p><strong>Issues:</strong></p>
+                <ul>
+                    <li>Timestamps take up extra space</li>
+                    <li>Not focused on speaker identity</li>
+                    <li>Time information not always needed</li>
+                </ul>
+            </div>
+            <div class="after">
+                <h4>✅ After (With You: Prefix)</h4>
+                <div class="text-example">
+                    <span class="you-prefix">You:</span> Hello world, this is a test of speech recognition
+                </div>
+                <div class="text-example">
+                    <span class="you-prefix">You:</span> Another line of transcribed text
+                </div>
+                <p><strong>Improvements:</strong></p>
+                <ul>
+                    <li>Clear speaker identification</li>
+                    <li>More compact display</li>
+                    <li>Focus on content, not time</li>
+                    <li>Green color for "You:" prefix</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Testing Goals</h2>
+            
+            <div class="feature-test">
+                <h4>✅ No Timestamps</h4>
+                <p>Time information should be completely removed from the transcript display.</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>✅ "You:" Prefix</h4>
+                <p>Each speech recognition result should start with a green "You:" prefix to indicate it's your speech.</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>✅ Compact Format</h4>
+                <p>Display should be more compact without timestamp lines taking up extra space.</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>✅ Clear Speaker Identity</h4>
+                <p>It should be immediately clear that this is your own speech input.</p>
+            </div>
+        </div>
+
+        <div class="expected">
+            <h3>🎯 Expected Behavior</h3>
+            <ul>
+                <li><strong>No Time Display:</strong> No timestamps or time information shown</li>
+                <li><strong>You: Prefix:</strong> Each final transcript starts with green "You:" text</li>
+                <li><strong>Compact Layout:</strong> More space for actual content, less UI clutter</li>
+                <li><strong>Clear Attribution:</strong> Easy to identify that this is your own speech</li>
+                <li><strong>Consistent Format:</strong> All transcribed text follows the same "You: [content]" pattern</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🗣️ Test Phrases</h2>
+            <p>Try speaking these phrases to test the new "You:" prefix format:</p>
+            <ul>
+                <li>"You should see this text with a You prefix"</li>
+                <li>"Testing the new display format without timestamps"</li>
+                <li>"This is much cleaner and more focused"</li>
+                <li>"Real-time transcription with speaker identification"</li>
+                <li>"Chrome extension speech to text functionality"</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>📱 What to Observe</h2>
+            <ul>
+                <li><strong>Interim Display:</strong> Temporary text still appears normally while speaking</li>
+                <li><strong>Final Format:</strong> When speech ends, text shows as "You: [your words]"</li>
+                <li><strong>No Timestamps:</strong> No time information displayed anywhere</li>
+                <li><strong>Green Prefix:</strong> "You:" appears in green color to distinguish from content</li>
+                <li><strong>Compact Layout:</strong> More content fits in the same space</li>
+            </ul>
+        </div>
+
+        <video controls muted>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <script>
+        console.log('You prefix test page loaded - Ready for speech recognition testing');
+        
+        // Add some audio for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.querySelector('video');
+            if (video) {
+                video.volume = 0.3; // Lower volume for testing
+                console.log('Video element ready for testing');
+            }
+        });
+    </script>
+</body>
+</html>

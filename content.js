@@ -4,6 +4,10 @@
     let isRecording = false;
     let transcriptOverlay = null;
     let interimElement = null;
+    let userSpeaking = false; // Track if user is actively speaking
+    let audioContext = null;
+    let analyser = null;
+    let microphone = null;
     
     console.log('Audio Transcription Extension: Content script loaded');
     
@@ -57,10 +61,14 @@
                 recognition = null;
             }
             
-            // Request microphone permission
+            // Request microphone permission and setup audio analysis
             try {
-                await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 console.log('Microphone permission granted');
+                
+                // Setup audio analysis to detect user speech
+                setupAudioAnalysis(stream);
+                
             } catch (error) {
                 throw new Error('Cannot access microphone: ' + error.message);
             }
@@ -99,8 +107,8 @@
                 
                 // Process final results first to avoid flickering
                 if (finalTranscript) {
-                    console.log('Final transcript:', finalTranscript);
-                    addFinalTranscript(finalTranscript);
+                    console.log('Final transcript:', finalTranscript, 'User speaking:', userSpeaking);
+                    addFinalTranscript(finalTranscript, userSpeaking);
                     
                     // Send to popup (if open)
                     chrome.runtime.sendMessage({
@@ -197,6 +205,49 @@
             console.error('Failed to start transcription:', error);
             showStatus('Failed to start: ' + error.message);
             throw error;
+        }
+    }
+    
+    // Setup audio analysis to detect user speech
+    function setupAudioAnalysis(stream) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            microphone = audioContext.createMediaStreamSource(stream);
+            
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            microphone.connect(analyser);
+            
+            // Monitor audio levels to detect user speech
+            function checkAudioLevel() {
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Calculate average volume
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / bufferLength;
+                
+                // Consider user speaking if volume is above threshold
+                const threshold = 25; // Adjust this value as needed
+                userSpeaking = average > threshold;
+                
+                if (isRecording) {
+                    requestAnimationFrame(checkAudioLevel);
+                }
+            }
+            
+            checkAudioLevel();
+            console.log('Audio analysis setup complete');
+            
+        } catch (error) {
+            console.error('Failed to setup audio analysis:', error);
+            // Fallback: assume all speech is from user
+            userSpeaking = true;
         }
     }
     
@@ -378,7 +429,7 @@
     }
     
     // Add final transcript text
-    function addFinalTranscript(text) {
+    function addFinalTranscript(text, isUserSpeech = true) {
         if (!transcriptOverlay) return;
         
         const container = transcriptOverlay.querySelector('.transcript-text-container');
@@ -397,14 +448,19 @@
             }, 200);
         }
         
-        // Add final text with timestamp
-        const now = new Date().toLocaleTimeString();
+        // Add final text with or without You: prefix based on source
         const finalDiv = document.createElement('div');
         finalDiv.className = 'transcript-item';
-        finalDiv.innerHTML = `
-            <div class="transcript-timestamp">${now}</div>
-            <div class="transcript-text">${text}</div>
-        `;
+        
+        if (isUserSpeech) {
+            finalDiv.innerHTML = `
+                <div class="transcript-text"><span style="color: #4CAF50; font-weight: 600;">You:</span> ${text}</div>
+            `;
+        } else {
+            finalDiv.innerHTML = `
+                <div class="transcript-text">${text}</div>
+            `;
+        }
         finalDiv.style.cssText = `
             margin-bottom: 12px;
             padding: 10px 12px;
@@ -455,11 +511,23 @@
     function stopTranscription() {
         console.log('Stopping transcription...');
         isRecording = false;
+        userSpeaking = false;
         
         if (recognition) {
             recognition.stop();
             recognition = null;
         }
+        
+        // Clean up audio analysis
+        if (microphone) {
+            microphone.disconnect();
+            microphone = null;
+        }
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
+        analyser = null;
         
         showStatus('Stopped');
         
