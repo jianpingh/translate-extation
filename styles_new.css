@@ -80,22 +80,6 @@
     flex-direction: column;
 }
 
-.transcript-status {
-    font-size: 12px;
-    color: #666;
-    margin-bottom: 8px;
-    padding: 6px 12px;
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 6px;
-    text-align: center;
-    font-weight: 500;
-}
-
-.transcript-text-container {
-    flex: 1;
-    overflow-y: auto;
-}
-
 .transcript-text {
     color: #333;
     background: transparent;

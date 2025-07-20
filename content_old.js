@@ -1,13 +1,13 @@
-// content.js - Content script for real-time audio transcription
+// content.js - 内容脚本，运行在网页中
 (function() {
     let recognition = null;
     let isRecording = false;
-    let transcriptOverlay = null;
-    let interimElement = null;
+    let audioContext = null;
+    let mediaStreamSource = null;
     
     console.log('Audio Transcription Extension: Content script loaded');
     
-    // Check browser support
+    // 检查浏览器支持
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
@@ -16,7 +16,7 @@
         console.log('Speech recognition API available');
     }
     
-    // Listen for messages from popup
+    // 监听来自popup的消息
     chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.log('Content script received message:', request);
         
@@ -31,7 +31,7 @@
                     console.error('Failed to start transcription:', error);
                     sendResponse({success: false, error: error.message});
                 });
-            return true; // Keep message channel open
+            return true; // 保持消息通道开放
         } else if (request.action === 'stopTranscription') {
             console.log('Stop transcription request');
             stopTranscription();
@@ -41,7 +41,7 @@
         }
     });
     
-    // Start transcription function
+    // Start transcription
     async function startTranscription(language = 'en-US') {
         console.log('startTranscription called with language:', language);
         
@@ -65,10 +65,6 @@
                 throw new Error('Cannot access microphone: ' + error.message);
             }
             
-            // Create and show transcript overlay first
-            createTranscriptOverlay();
-            showStatus('Initializing...');
-            
             // Create speech recognition instance
             recognition = new SpeechRecognition();
             recognition.continuous = true;
@@ -76,20 +72,16 @@
             recognition.lang = language;
             recognition.maxAlternatives = 1;
             
-            console.log('Speech recognition instance created with language:', language);
+            console.log('Speech recognition instance created');
             
             // Listen for recognition results
             recognition.onresult = function(event) {
-                console.log('Recognition result event triggered, results count:', event.results.length);
+                console.log('Recognition result event triggered');
                 let finalTranscript = '';
                 let interimTranscript = '';
                 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
-                    const confidence = event.results[i][0].confidence;
-                    
-                    console.log('Result', i, '- Final:', event.results[i].isFinal, 'Text:', transcript, 'Confidence:', confidence);
-                    
                     if (event.results[i].isFinal) {
                         finalTranscript += transcript;
                     } else {
@@ -97,34 +89,32 @@
                     }
                 }
                 
-                // Display interim results (real-time feedback)
+                // Display interim results
                 if (interimTranscript) {
                     console.log('Interim transcript:', interimTranscript);
                     updateInterimTranscript(interimTranscript);
                 }
                 
-                // Process final results
+                // Send final results to popup
                 if (finalTranscript) {
-                    console.log('Final transcript:', finalTranscript);
-                    addFinalTranscript(finalTranscript);
+                    console.log('Sending transcript text:', finalTranscript);
                     
                     // Send to popup (if open)
                     chrome.runtime.sendMessage({
                         action: 'transcriptUpdate',
                         text: finalTranscript,
                         isFinal: true
-                    }).catch(() => {
-                        // Popup might be closed, ignore error
-                        console.log('Popup not available for message');
                     });
+                    
+                    // Also display on page
+                    showTranscriptOnPage(finalTranscript);
                 }
             };
             
             // Listen for start event
             recognition.onstart = function() {
-                console.log('Speech recognition started successfully');
+                console.log('Speech recognition started');
                 isRecording = true;
-                showStatus('Listening...');
             };
             
             // Listen for errors
@@ -134,16 +124,16 @@
                 
                 switch(event.error) {
                     case 'no-speech':
-                        errorMessage = 'No speech detected - please speak louder';
+                        errorMessage = 'No speech detected';
                         break;
                     case 'audio-capture':
-                        errorMessage = 'Cannot capture audio - check microphone';
+                        errorMessage = 'Cannot capture audio';
                         break;
                     case 'not-allowed':
                         errorMessage = 'Microphone permission denied';
                         break;
                     case 'network':
-                        errorMessage = 'Network error - check internet connection';
+                        errorMessage = 'Network error';
                         break;
                     case 'service-not-allowed':
                         errorMessage = 'Speech service unavailable';
@@ -152,15 +142,9 @@
                         errorMessage = event.error;
                 }
                 
-                showStatus('Error: ' + errorMessage);
-                console.error('Speech recognition error details:', event);
-                
-                // Send error to popup
                 chrome.runtime.sendMessage({
                     action: 'transcriptionError',
                     error: errorMessage
-                }).catch(() => {
-                    console.log('Popup not available for error message');
                 });
             };
             
@@ -169,57 +153,96 @@
                 console.log('Speech recognition ended');
                 if (isRecording) {
                     // Auto restart recognition if still in recording state
-                    console.log('Auto restarting speech recognition...');
                     setTimeout(() => {
                         if (isRecording && recognition) {
                             try {
+                                console.log('Auto restarting speech recognition');
                                 recognition.start();
                             } catch (e) {
                                 console.error('Failed to restart recognition:', e);
-                                showStatus('Failed to restart - click Start again');
-                                isRecording = false;
                             }
                         }
                     }, 100);
                 } else {
-                    showStatus('Stopped');
                     chrome.runtime.sendMessage({
                         action: 'transcriptionEnded'
-                    }).catch(() => {
-                        console.log('Popup not available for end message');
                     });
                 }
             };
             
             // Start recognition
-            console.log('Starting speech recognition...');
+            console.log('Starting speech recognition');
             recognition.start();
             
         } catch (error) {
             console.error('Failed to start transcription:', error);
-            showStatus('Failed to start: ' + error.message);
             throw error;
         }
     }
     
-    // Create transcript overlay
-    function createTranscriptOverlay() {
-        // Remove existing overlay
-        if (transcriptOverlay) {
-            transcriptOverlay.remove();
+    // Display transcript text on page
+    let transcriptOverlay = null;
+    let interimElement = null;
+    
+    function updateInterimTranscript(text) {
+        if (!transcriptOverlay) {
+            createTranscriptOverlay();
         }
         
+        if (!interimElement) {
+            interimElement = document.createElement('div');
+            interimElement.className = 'transcript-interim';
+            interimElement.style.cssText = 'color: #999; font-style: italic; padding: 5px 0;';
+            const content = transcriptOverlay.querySelector('.transcript-content');
+            content.appendChild(interimElement);
+        }
+        
+        interimElement.textContent = 'Recognizing: ' + text;
+    }
+    
+    function showTranscriptOnPage(text) {
+        // Create or update display overlay
+        if (!transcriptOverlay) {
+            createTranscriptOverlay();
+        }
+        
+        // Clear interim display
+        if (interimElement) {
+            interimElement.remove();
+            interimElement = null;
+        }
+        
+        // Add new transcript text
+        const now = new Date().toLocaleTimeString();
+        const textElement = document.createElement('div');
+        textElement.className = 'transcript-item';
+        textElement.innerHTML = `
+            <div class="transcript-timestamp">${now}</div>
+            <div class="transcript-text">${text}</div>
+        `;
+        
+        const content = transcriptOverlay.querySelector('.transcript-content');
+        content.appendChild(textElement);
+        
+        // Scroll to bottom
+        content.scrollTop = content.scrollHeight;
+        
+        // Limit number of displayed items
+        const items = content.querySelectorAll('.transcript-item');
+        if (items.length > 10) {
+            items[0].remove();
+        }
+    }
+    
+    function createTranscriptOverlay() {
         transcriptOverlay = document.createElement('div');
         transcriptOverlay.className = 'transcript-overlay active';
         transcriptOverlay.innerHTML = `
-            <div class="transcript-header">
-                <span>🎵 Real-time Transcription</span>
+            <div class="transcript-header" id="transcript-header">
+                🎵 Real-time Transcription - Draggable
                 <button class="transcript-close">×</button>
             </div>
-            <div class="transcript-content">
-                <div class="transcript-status">Ready to start...</div>
-                <div class="transcript-text-container"></div>
-            </div>
+            <div class="transcript-content"></div>
         `;
         
         // Add close button event
@@ -232,13 +255,10 @@
             }
         });
         
-        // Make draggable
+        // Add drag functionality
         makeDraggable(transcriptOverlay);
         
-        // Add to page
         document.body.appendChild(transcriptOverlay);
-        
-        console.log('Transcript overlay created and added to page');
     }
     
     // Make element draggable
@@ -272,7 +292,7 @@
             let newX = initialX + deltaX;
             let newY = initialY + deltaY;
             
-            // Keep within viewport bounds
+            // Boundary check
             const windowWidth = window.innerWidth;
             const windowHeight = window.innerHeight;
             const elementWidth = element.offsetWidth;
@@ -299,114 +319,24 @@
                         left: rect.left,
                         top: rect.top
                     }
-                }).catch(err => console.log('Failed to save position:', err));
+                });
             }
         });
         
         // Load saved position
-        chrome.storage.local.get(['transcriptPosition']).then(result => {
+        chrome.storage.local.get(['transcriptPosition'], function(result) {
             if (result.transcriptPosition) {
                 const pos = result.transcriptPosition;
                 element.style.left = pos.left + 'px';
                 element.style.top = pos.top + 'px';
                 element.style.right = 'auto';
             }
-        }).catch(err => console.log('Failed to load position:', err));
-    }
-    
-    // Show status in overlay
-    function showStatus(message) {
-        if (!transcriptOverlay) return;
-        
-        const statusElement = transcriptOverlay.querySelector('.transcript-status');
-        if (statusElement) {
-            statusElement.textContent = message;
-            statusElement.style.color = message.includes('Error') ? '#f44336' : '#4CAF50';
-        }
-        console.log('Status updated:', message);
-    }
-    
-    // Update interim transcript (real-time preview)
-    function updateInterimTranscript(text) {
-        if (!transcriptOverlay) return;
-        
-        const container = transcriptOverlay.querySelector('.transcript-text-container');
-        if (!container) return;
-        
-        // Remove previous interim element
-        const oldInterim = container.querySelector('.transcript-interim');
-        if (oldInterim) {
-            oldInterim.remove();
-        }
-        
-        // Add new interim element
-        if (text.trim()) {
-            const interimDiv = document.createElement('div');
-            interimDiv.className = 'transcript-interim';
-            interimDiv.textContent = 'Recognizing: ' + text;
-            interimDiv.style.cssText = `
-                color: #999;
-                font-style: italic;
-                padding: 8px 12px;
-                background: rgba(255, 193, 7, 0.1);
-                border-radius: 6px;
-                border-left: 2px solid #ffc107;
-                margin-bottom: 8px;
-                animation: pulse 1.5s infinite;
-            `;
-            container.appendChild(interimDiv);
-        }
-        
-        console.log('Interim transcript updated:', text);
-    }
-    
-    // Add final transcript text
-    function addFinalTranscript(text) {
-        if (!transcriptOverlay) return;
-        
-        const container = transcriptOverlay.querySelector('.transcript-text-container');
-        if (!container) return;
-        
-        // Remove interim text
-        const interimDiv = container.querySelector('.transcript-interim');
-        if (interimDiv) {
-            interimDiv.remove();
-        }
-        
-        // Add final text with timestamp
-        const now = new Date().toLocaleTimeString();
-        const finalDiv = document.createElement('div');
-        finalDiv.className = 'transcript-item';
-        finalDiv.innerHTML = `
-            <div class="transcript-timestamp">${now}</div>
-            <div class="transcript-text">${text}</div>
-        `;
-        finalDiv.style.cssText = `
-            margin-bottom: 12px;
-            padding: 10px 12px;
-            background: rgba(247, 250, 252, 0.8);
-            border-radius: 8px;
-            border-left: 3px solid #667eea;
-            animation: fadeInUp 0.3s ease-out;
-        `;
-        
-        container.appendChild(finalDiv);
-        
-        // Auto scroll to bottom
-        container.scrollTop = container.scrollHeight;
-        
-        // Limit number of items to prevent memory issues
-        const items = container.querySelectorAll('.transcript-item');
-        if (items.length > 20) {
-            items[0].remove();
-        }
-        
-        console.log('Final transcript added:', text);
+        });
     }
     
     // Stop transcription
     function stopTranscription() {
-        console.log('Stopping transcription...');
+        console.log('Stopping transcription');
         isRecording = false;
         
         if (recognition) {
@@ -414,38 +344,94 @@
             recognition = null;
         }
         
-        showStatus('Stopped');
+        if (audioContext) {
+            audioContext.close();
+            audioContext = null;
+        }
         
-        // Hide overlay
+        if (mediaStreamSource) {
+            mediaStreamSource.disconnect();
+            mediaStreamSource = null;
+        }
+        
+        // Hide transcript display on page
         if (transcriptOverlay) {
             transcriptOverlay.style.display = 'none';
         }
-        
-        console.log('Transcription stopped');
     }
     
-    // Test speech recognition availability
-    function testSpeechRecognition() {
-        if (SpeechRecognition) {
-            console.log('Speech Recognition API is available');
-            console.log('Supported languages might include: en-US, zh-CN, ja-JP, ko-KR, etc.');
-            
-            // Test basic functionality
-            try {
-                const testRecognition = new SpeechRecognition();
-                console.log('Speech recognition instance created successfully');
-                testRecognition = null;
-            } catch (error) {
-                console.error('Failed to create speech recognition instance:', error);
+    // 捕获页面音频
+    async function capturePageAudio() {
+        try {
+            // 尝试获取显示媒体（屏幕/标签页音频）
+            if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    audio: true,
+                    video: false
+                });
+                
+                // 创建音频上下文
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                mediaStreamSource = audioContext.createMediaStreamSource(stream);
+                
+                console.log('成功捕获页面音频');
+                return;
             }
-        } else {
-            console.error('Speech Recognition API is not available in this browser');
+        } catch (error) {
+            console.log('无法捕获页面音频，将使用麦克风:', error.message);
+        }
+        
+        // 如果无法捕获页面音频，回退到麦克风
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            mediaStreamSource = audioContext.createMediaStreamSource(stream);
+            console.log('使用麦克风音频');
+        } catch (error) {
+            console.error('无法访问麦克风:', error);
+            throw new Error('无法访问音频设备');
         }
     }
     
-    // Run test on load
-    testSpeechRecognition();
+    // 注入脚本到页面，用于更好地访问页面音频
+    function injectPageScript() {
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL('injected.js');
+        script.onload = function() {
+            this.remove();
+        };
+        (document.head || document.documentElement).appendChild(script);
+    }
     
-    console.log('Content script initialization complete');
+    // 页面加载完成后注入脚本
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectPageScript);
+    } else {
+        injectPageScript();
+    }
+    
+    // 监听页面中的视频/音频元素
+    function monitorMediaElements() {
+        const mediaElements = document.querySelectorAll('video, audio');
+        mediaElements.forEach(element => {
+            if (!element.hasAttribute('data-transcript-monitored')) {
+                element.setAttribute('data-transcript-monitored', 'true');
+                
+                element.addEventListener('play', function() {
+                    console.log('检测到媒体播放:', element.src || element.currentSrc);
+                });
+                
+                element.addEventListener('pause', function() {
+                    console.log('媒体暂停');
+                });
+            }
+        });
+    }
+    
+    // 定期检查新的媒体元素
+    setInterval(monitorMediaElements, 2000);
+    
+    // 初始检查
+    monitorMediaElements();
     
 })();

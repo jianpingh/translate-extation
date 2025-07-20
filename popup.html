@@ -5,128 +5,150 @@
     <style>
         body {
             width: 350px;
-            height: 500px;
+            height: 280px;
             padding: 20px;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
         .header {
             text-align: center;
             margin-bottom: 20px;
-            color: #333;
+            color: white;
+        }
+        .header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
         }
         .control-panel {
             margin-bottom: 20px;
             padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #f9f9f9;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
         .button {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0;
+            padding: 12px;
+            margin: 8px 0;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
-            transition: background-color 0.3s;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
         .start-btn {
-            background-color: #4CAF50;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
             color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
         .start-btn:hover {
-            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .stop-btn {
-            background-color: #f44336;
+            background: linear-gradient(135deg, #f44336, #da190b);
             color: white;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
         }
         .stop-btn:hover {
-            background-color: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+        }
+        .stop-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .status {
             text-align: center;
             margin: 10px 0;
-            font-weight: bold;
+            font-weight: 500;
+            font-size: 13px;
         }
         .status.active {
             color: #4CAF50;
         }
         .status.inactive {
-            color: #666;
-        }
-        .transcript-area {
-            height: 200px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            overflow-y: auto;
-            background-color: white;
-            font-size: 12px;
-            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.8);
         }
         .settings {
             margin-top: 15px;
         }
         .setting-item {
-            margin: 10px 0;
+            margin: 15px 0;
         }
         .setting-item label {
             display: block;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #333;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
         }
         .setting-item select {
             width: 100%;
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-        }
-        .clear-btn {
-            background-color: #ff9800;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            padding: 5px 10px;
-            font-size: 12px;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
         }
-        .clear-btn:hover {
-            background-color: #e68900;
+        .setting-item select option {
+            background: #2c2c2c;
+            color: white;
+        }
+        .instructions {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.4;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h3>🎵 音频转文本助手</h3>
+        <h3>🎵 Audio Transcription</h3>
     </div>
     
     <div class="control-panel">
-        <button id="startBtn" class="button start-btn">开始转录</button>
-        <button id="stopBtn" class="button stop-btn" disabled>停止转录</button>
-        <div id="status" class="status inactive">状态: 未开始</div>
+        <button id="startBtn" class="button start-btn">Start Recording</button>
+        <button id="stopBtn" class="button stop-btn" disabled>Stop Recording</button>
+        <div id="status" class="status inactive">Status: Ready</div>
     </div>
     
     <div class="settings">
         <div class="setting-item">
-            <label for="languageSelect">语言设置:</label>
+            <label for="languageSelect">Language:</label>
             <select id="languageSelect">
-                <option value="zh-CN">中文 (简体)</option>
-                <option value="zh-TW">中文 (繁体)</option>
+                <option value="zh-CN">Chinese (Simplified)</option>
+                <option value="zh-TW">Chinese (Traditional)</option>
                 <option value="en-US">English (US)</option>
                 <option value="en-GB">English (UK)</option>
-                <option value="ja-JP">日本語</option>
-                <option value="ko-KR">한국어</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="ko-KR">Korean</option>
             </select>
         </div>
         
         <div class="setting-item">
-            <label for="transcript">转录文本:</label>
-            <div id="transcript" class="transcript-area">
-                <div style="color: #999; text-align: center; margin-top: 80px;">
-                    点击"开始转录"按钮开始捕获音频...
-                </div>
+            <div class="instructions">
+                Click "Start Recording" to begin voice recognition. Transcripts will appear in a draggable overlay on the page.
             </div>
-            <button id="clearBtn" class="button clear-btn">清空文本</button>
         </div>
     </div>
 

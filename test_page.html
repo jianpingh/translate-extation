@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audio Transcription Test Page</title>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .video-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .status {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+        .mic-test {
+            text-align: center;
+            padding: 20px;
+        }
+        .mic-test button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .mic-test button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Audio Transcription Extension Test Page</h1>
+    
+    <div class="instructions">
+        <h3>How to test the extension:</h3>
+        <ol>
+            <li>Make sure the Audio Transcription extension is loaded in Chrome</li>
+            <li>Click the extension icon in the browser toolbar</li>
+            <li>Select your preferred language (English is recommended for testing)</li>
+            <li>Click "Start Recording" button</li>
+            <li>Allow microphone access when prompted</li>
+            <li>Speak clearly into your microphone</li>
+            <li>Watch the real-time transcription appear in the floating overlay</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h3>Speech Test Phrases (English)</h3>
+        <p>Try speaking these phrases to test the transcription accuracy:</p>
+        <ul>
+            <li>"Hello, this is a test of the audio transcription extension."</li>
+            <li>"The quick brown fox jumps over the lazy dog."</li>
+            <li>"Speech recognition technology is improving rapidly."</li>
+            <li>"Real-time transcription helps with accessibility and note-taking."</li>
+            <li>"Chrome extensions can access the Web Speech API for voice recognition."</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test Status</h3>
+        <div class="status" id="status">
+            Ready for testing. Open the extension popup to start.
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Expected Features</h3>
+        <ul>
+            <li>✅ Floating draggable transcript window (400x300px)</li>
+            <li>✅ Real-time speech recognition (interim results)</li>
+            <li>✅ Final transcript with timestamps</li>
+            <li>✅ Auto-restart on recognition end</li>
+            <li>✅ Error handling and status updates</li>
+            <li>✅ Position memory (window location saved)</li>
+            <li>✅ Clean, modern Felo-style UI</li>
+        </ul>
+    </div>
+    
+    <div class="mic-test">
+        <h3>Browser Microphone Test</h3>
+        <button onclick="testMicrophone()">Test Microphone Access</button>
+        <div id="mic-status" style="margin-top: 10px;"></div>
+    </div>
+    
+    <script>
+        // Test microphone access
+        function testMicrophone() {
+            const status = document.getElementById('mic-status');
+            status.textContent = 'Testing microphone access...';
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    status.style.color = 'green';
+                    status.textContent = '✅ Microphone access granted! Extension should work properly.';
+                    // Stop the stream
+                    stream.getTracks().forEach(track => track.stop());
+                })
+                .catch(error => {
+                    status.style.color = 'red';
+                    status.textContent = '❌ Microphone access denied: ' + error.message;
+                });
+        }
+        
+        // Check if Speech Recognition API is available
+        function checkSpeechAPI() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                console.log('✅ Speech Recognition API is available');
+                return true;
+            } else {
+                console.log('❌ Speech Recognition API is not available');
+                return false;
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Test page loaded');
+            const apiAvailable = checkSpeechAPI();
+            
+            if (!apiAvailable) {
+                document.getElementById('status').innerHTML = 
+                    '<span style="color: red;">❌ Speech Recognition API not available in this browser</span>';
+            }
+        });
+    </script>
+</body>
+</html>
