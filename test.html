@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频转文本插件测试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .test-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background-color: #45a049;
+        }
+        .test-audio {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .test-video {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px 0;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 音频转文本插件测试页面</h1>
+    
+    <div class="instructions">
+        <h3>测试说明</h3>
+        <ol>
+            <li>确保已安装音频转文本插件</li>
+            <li>点击浏览器工具栏中的插件图标</li>
+            <li>点击"开始转录"并允许麦克风权限</li>
+            <li>在下方选择不同的测试方式</li>
+            <li>观察插件是否正确转录音频内容</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>📢 麦克风测试</h3>
+        <p>直接对着麦克风说话，测试语音识别功能。</p>
+        <button class="test-button" onclick="speakTest()">开始说话测试</button>
+        <div id="speakResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🎵 音频文件测试</h3>
+        <p>播放音频文件，测试插件能否识别播放的音频内容。</p>
+        <audio class="test-audio" controls>
+            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
+            <p>您的浏览器不支持音频播放。</p>
+        </audio>
+        <p><small>注：由于跨域限制，可能需要本地音频文件进行测试。</small></p>
+    </div>
+
+    <div class="test-section">
+        <h3>📹 视频测试</h3>
+        <p>播放包含语音的视频，测试视频音频转录功能。</p>
+        <video class="test-video" controls>
+            <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+            <p>您的浏览器不支持视频播放。</p>
+        </video>
+        <p><small>注：可以使用YouTube或其他视频网站进行测试。</small></p>
+    </div>
+
+    <div class="test-section">
+        <h3>🎙️ 语音合成测试</h3>
+        <p>使用浏览器的语音合成功能生成测试音频。</p>
+        <button class="test-button" onclick="speakText('你好，这是一个测试语音。')">中文测试</button>
+        <button class="test-button" onclick="speakText('Hello, this is a test speech.')">英文测试</button>
+        <button class="test-button" onclick="speakText('こんにちは、これはテスト音声です。')">日文测试</button>
+    </div>
+
+    <div class="test-section">
+        <h3>✅ 测试检查项</h3>
+        <ul>
+            <li>□ 插件图标正常显示</li>
+            <li>□ 弹出窗口正常打开</li>
+            <li>□ 语言选择功能正常</li>
+            <li>□ 开始/停止转录按钮正常</li>
+            <li>□ 麦克风权限请求正常</li>
+            <li>□ 能够识别麦克风语音</li>
+            <li>□ 能够识别页面音频/视频</li>
+            <li>□ 转录文本正常显示</li>
+            <li>□ 时间戳显示正确</li>
+            <li>□ 清空文本功能正常</li>
+        </ul>
+    </div>
+
+    <script>
+        // 语音合成测试
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // 根据文本内容选择语言
+                if (/[\u4e00-\u9fa5]/.test(text)) {
+                    utterance.lang = 'zh-CN';
+                } else if (/[\u3040-\u309f\u30a0-\u30ff]/.test(text)) {
+                    utterance.lang = 'ja-JP';
+                } else {
+                    utterance.lang = 'en-US';
+                }
+                
+                utterance.rate = 0.8;
+                utterance.pitch = 1;
+                utterance.volume = 0.8;
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('您的浏览器不支持语音合成功能');
+            }
+        }
+        
+        // 说话测试提示
+        function speakTest() {
+            const result = document.getElementById('speakResult');
+            result.innerHTML = '<p style="color: #4CAF50;">🎤 请开始说话，观察插件是否能正确转录您的语音...</p>';
+            
+            setTimeout(() => {
+                result.innerHTML = '<p style="color: #666;">测试完成。请检查插件窗口中是否出现了转录文本。</p>';
+            }, 10000);
+        }
+        
+        // 页面加载完成后的提示
+        window.addEventListener('load', function() {
+            console.log('测试页面已加载，可以开始测试音频转文本插件');
+            
+            // 检查是否支持语音识别
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.warn('此浏览器可能不支持语音识别功能');
+            }
+            
+            // 检查是否支持获取媒体设备
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.warn('此浏览器可能不支持媒体设备访问');
+            }
+        });
+        
+        // 监听页面消息（用于测试与插件的通信）
+        window.addEventListener('message', function(event) {
+            if (event.data.type && event.data.type.includes('AUDIO')) {
+                console.log('收到音频相关消息:', event.data);
+            }
+        });
+    </script>
+</body>
+</html>

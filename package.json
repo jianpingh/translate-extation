@@ -1,0 +1,32 @@
+{
+  "name": "audio-transcript-chrome-extension",
+  "version": "1.0.0",
+  "description": "Chrome浏览器插件：将在线视频和会议音频转换为文本",
+  "main": "background.js",
+  "scripts": {
+    "build": "echo \"No build step required for Chrome extension\"",
+    "test": "echo \"No tests specified\"",
+    "lint": "echo \"Linting Chrome extension files\""
+  },
+  "keywords": [
+    "chrome-extension",
+    "speech-to-text",
+    "audio-transcription",
+    "video-subtitles",
+    "meeting-transcription",
+    "语音转文本",
+    "音频转录"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jianpingh/translate-extation.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jianpingh/translate-extation/issues"
+  },
+  "homepage": "https://github.com/jianpingh/translate-extation#readme"
+}
