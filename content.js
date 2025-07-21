@@ -92,23 +92,32 @@
             recognition.lang = language;
             recognition.maxAlternatives = 1;
             
-            // Optimize for real-time performance
+            // Enhanced real-time performance optimizations
             if ('webkitSpeechRecognition' in window) {
-                // Chrome-specific optimizations
+                // Chrome-specific optimizations for faster response
                 recognition.serviceURI = 'wss://www.google.com/speech-api/full-duplex/v1/up';
+                // Note: grammars property removed to avoid conversion error
+            }
+            
+            // Additional performance optimizations
+            if (typeof recognition.speechTimeout !== 'undefined') {
+                recognition.speechTimeout = 100; // Faster speech detection timeout
+            }
+            if (typeof recognition.speechTimeoutBuffer !== 'undefined') {
+                recognition.speechTimeoutBuffer = 50; // Reduce buffer for faster response
             }
             
             console.log('Speech recognition instance created with real-time optimizations, language:', language);
             
-            // Listen for recognition results with proper order handling
+            // Listen for recognition results with enhanced real-time processing
             recognition.onresult = function(event) {
                 console.log('Recognition result event triggered, results count:', event.results.length);
                 
-                // Process only the latest interim result for real-time display
+                // Process results immediately without delay
                 let latestInterimText = '';
                 let newFinalTranscript = '';
                 
-                // Find the latest interim result (non-final)
+                // Fast processing: get the latest interim result immediately
                 for (let i = event.results.length - 1; i >= 0; i--) {
                     if (!event.results[i].isFinal && event.results[i][0].transcript.trim()) {
                         latestInterimText = event.results[i][0].transcript;
@@ -117,7 +126,7 @@
                     }
                 }
                 
-                // Process only new final results from the current event
+                // Fast processing: get new final results immediately
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
                         const finalText = event.results[i][0].transcript;
@@ -126,18 +135,19 @@
                     }
                 }
                 
-                // Update interim display with latest text
+                // Immediate update for real-time feel - no delay
                 if (latestInterimText && latestInterimText !== lastInterimText) {
-                    console.log('Updating interim display:', latestInterimText);
+                    console.log('Updating interim display immediately:', latestInterimText);
+                    // Use immediate execution instead of requestAnimationFrame for faster response
                     updateInterimTranscript(latestInterimText);
                 }
                 
-                // Process final transcript if we have new content
+                // Immediate final transcript processing
                 if (newFinalTranscript.trim() && newFinalTranscript !== lastFinalTranscript) {
-                    console.log('Processing new final transcript:', newFinalTranscript, 'User speaking:', userSpeaking);
+                    console.log('Processing new final transcript immediately:', newFinalTranscript, 'User speaking:', userSpeaking);
                     lastFinalTranscript = newFinalTranscript;
                     
-                    // Add final transcript in correct order
+                    // Immediate final transcript update
                     addFinalTranscript(newFinalTranscript, userSpeaking);
                     
                     // Send to popup (if open) - non-blocking
@@ -407,7 +417,7 @@
         console.log('Status updated:', message);
     }
     
-    // Update interim transcript with true word-by-word append (单词逐个出现且不消失)
+    // Update interim transcript with ultra-fast word-by-word append (极速单词显示)
     function updateInterimTranscript(text) {
         if (!transcriptOverlay) return;
         
@@ -434,7 +444,7 @@
                 border-radius: 8px;
                 margin-bottom: 8px;
                 animation: pulse 2s infinite;
-                transition: all 0.2s ease;
+                transition: none;
                 min-height: 20px;
                 opacity: 1;
                 position: relative;
@@ -450,7 +460,7 @@
         // Parse new words from the text
         const newWords = text.trim().split(' ').filter(w => w.length > 0);
         
-        // Always append new words, never replace or remove existing ones during interim
+        // Ultra-fast word appending - minimize DOM operations
         if (newWords.length > currentInterimWords.length) {
             // Check if new text starts with current words (可以追加)
             let canAppend = true;
@@ -462,49 +472,43 @@
             }
             
             if (canAppend) {
-                // Append only the new words (单词逐个出现)
+                // Append only the new words (极速单词出现)
                 for (let i = currentInterimWords.length; i < newWords.length; i++) {
                     const newWord = newWords[i];
                     
-                    // Create word element with animation
+                    // Create word element with minimal styling for speed
                     const wordSpan = document.createElement('span');
                     wordSpan.textContent = (currentInterimWords.length > 0 ? ' ' : '') + newWord;
                     wordSpan.style.cssText = `
                         display: inline;
-                        animation: fadeIn 0.3s ease-in;
+                        animation: fadeIn 0.1s ease-in;
                         margin-right: 2px;
                         opacity: 1;
                     `;
                     
-                    // Append to the interim div (不消失)
+                    // Immediate append without delay (不消失)
                     interimDiv.appendChild(wordSpan);
                     currentInterimWords.push(newWord);
                     
-                    console.log('New word appeared:', newWord);
+                    console.log('New word appeared instantly:', newWord);
                 }
             } else {
-                // Only replace if text structure is completely different
-                console.log('Text structure changed, replacing interim content');
+                // Fast replacement for completely different text
+                console.log('Text structure changed, fast replacing interim content');
                 interimDiv.innerHTML = '';
                 currentInterimWords = [];
                 
+                // Build all words at once for speed
+                let htmlContent = '';
                 for (let i = 0; i < newWords.length; i++) {
                     const word = newWords[i];
-                    const wordSpan = document.createElement('span');
-                    wordSpan.textContent = (i > 0 ? ' ' : '') + word;
-                    wordSpan.style.cssText = `
-                        display: inline;
-                        animation: fadeIn 0.3s ease-in;
-                        margin-right: 2px;
-                        opacity: 1;
-                    `;
-                    interimDiv.appendChild(wordSpan);
+                    htmlContent += `<span style="display: inline; margin-right: 2px; opacity: 1;">${i > 0 ? ' ' : ''}${word}</span>`;
                     currentInterimWords.push(word);
                 }
+                interimDiv.innerHTML = htmlContent;
             }
         } else {
-            // For shorter text or corrections, only update if significantly different
-            // This prevents words from disappearing during interim phase
+            // Keep existing words to prevent disappearing during interim phase
             console.log('Keeping existing interim words to prevent disappearing');
         }
         
@@ -513,12 +517,10 @@
         // Ensure visibility
         interimDiv.style.opacity = '1';
         
-        // Immediate scroll update for real-time tracking
-        requestAnimationFrame(() => {
-            container.scrollTop = container.scrollHeight;
-        });
+        // Immediate scroll update - no animation frame delay
+        container.scrollTop = container.scrollHeight;
         
-        console.log('Current interim words (never disappear):', currentInterimWords);
+        console.log('Current interim words (ultra-fast):', currentInterimWords);
     }
     
     // Add final transcript text with true cumulative display (preserve all words)
@@ -631,11 +633,9 @@
             console.log('New final transcript added in correct order:', text);
         }
         
-        // Immediate scroll to bottom to maintain order visibility
-        requestAnimationFrame(() => {
-            container.scrollTop = container.scrollHeight;
-            console.log('Scrolled to show latest transcript in order');
-        });
+        // Immediate scroll to bottom - no animation delay for ultra-fast response
+        container.scrollTop = container.scrollHeight;
+        console.log('Scrolled immediately to show latest transcript');
         
         // Limit number of items to prevent memory issues
         const items = container.querySelectorAll('.transcript-item');
