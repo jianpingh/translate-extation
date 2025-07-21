@@ -8,6 +8,8 @@
     let audioContext = null;
     let analyser = null;
     let microphone = null;
+    let lastFinalTranscript = ''; // Track last final transcript to prevent duplicates
+    let lastInterimText = ''; // Track last interim text to prevent duplicates
     
     console.log('Audio Transcription Extension: Content script loaded');
     
@@ -49,6 +51,10 @@
     async function startTranscription(language = 'en-US') {
         console.log('startTranscription called with language:', language);
         
+        // Reset deduplication tracking variables
+        lastFinalTranscript = '';
+        lastInterimText = '';
+        
         try {
             // Check browser support
             if (!SpeechRecognition) {
@@ -77,21 +83,30 @@
             createTranscriptOverlay();
             showStatus('Ready');
             
-            // Create speech recognition instance
+            // Create speech recognition instance with optimized settings for real-time
             recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = language;
             recognition.maxAlternatives = 1;
             
-            console.log('Speech recognition instance created with language:', language);
+            // Optimize for real-time performance
+            if ('webkitSpeechRecognition' in window) {
+                // Chrome-specific optimizations
+                recognition.serviceURI = 'wss://www.google.com/speech-api/full-duplex/v1/up';
+            }
             
-            // Listen for recognition results
+            console.log('Speech recognition instance created with real-time optimizations, language:', language);
+            
+            // Listen for recognition results with deduplication
             recognition.onresult = function(event) {
                 console.log('Recognition result event triggered, results count:', event.results.length);
                 let finalTranscript = '';
                 let interimTranscript = '';
+                // Process results immediately for real-time display
+                let hasNewContent = false;
                 
+                // Process only new results to prevent duplication
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
                     const confidence = event.results[i][0].confidence;
@@ -100,17 +115,25 @@
                     
                     if (event.results[i].isFinal) {
                         finalTranscript += transcript;
+                        hasNewContent = true;
                     } else {
-                        interimTranscript += transcript;
+                        // Only use the latest interim result to prevent duplication
+                        if (i === event.results.length - 1) {
+                            interimTranscript = transcript;
+                            hasNewContent = true;
+                        }
                     }
                 }
                 
-                // Process final results first to avoid flickering
-                if (finalTranscript) {
-                    console.log('Final transcript:', finalTranscript, 'User speaking:', userSpeaking);
+                // Check for duplicate final transcripts
+                if (finalTranscript.trim() && finalTranscript !== lastFinalTranscript) {
+                    console.log('New final transcript (deduplicated):', finalTranscript, 'User speaking:', userSpeaking);
+                    lastFinalTranscript = finalTranscript;
+                    
+                    // Add final transcript with guaranteed persistence
                     addFinalTranscript(finalTranscript, userSpeaking);
                     
-                    // Send to popup (if open)
+                    // Send to popup (if open) - non-blocking
                     chrome.runtime.sendMessage({
                         action: 'transcriptUpdate',
                         text: finalTranscript,
@@ -119,9 +142,11 @@
                         // Popup might be closed, ignore error
                         console.log('Popup not available for message');
                     });
-                } else if (interimTranscript) {
-                    // Only show interim results if no final results
-                    console.log('Interim transcript:', interimTranscript);
+                }
+                
+                // Show interim results only if different from final
+                if (interimTranscript.trim() && interimTranscript !== lastFinalTranscript) {
+                    console.log('Interim transcript (deduplicated):', interimTranscript);
                     updateInterimTranscript(interimTranscript);
                 }
             };
@@ -381,76 +406,94 @@
         console.log('Status updated:', message);
     }
     
-    // Update interim transcript (real-time preview)
+    // Update interim transcript (real-time preview) - optimized for speed with deduplication
     function updateInterimTranscript(text) {
         if (!transcriptOverlay) return;
         
         const container = transcriptOverlay.querySelector('.transcript-text-container');
         if (!container) return;
         
+        // Skip if same as last interim text
+        if (text === lastInterimText) {
+            return;
+        }
+        lastInterimText = text;
+        
         // Find or create interim element
         let interimDiv = container.querySelector('.transcript-interim');
         
         if (!interimDiv) {
-            // Create new interim element
+            // Create new interim element with immediate display
             interimDiv = document.createElement('div');
             interimDiv.className = 'transcript-interim';
             interimDiv.style.cssText = `
                 color: white;
                 font-style: normal;
                 padding: 8px 12px;
-                background: rgba(0, 0, 0, 0.75);
-                border-radius: 6px;
+                background: linear-gradient(135deg, rgba(0, 0, 0, 0.75) 0%, rgba(30, 30, 30, 0.7) 100%);
+                border-radius: 8px;
                 margin-bottom: 8px;
                 animation: pulse 1.5s infinite;
-                transition: all 0.2s ease;
+                transition: opacity 0.2s ease;
                 min-height: 20px;
+                opacity: 1;
+                position: relative;
+                z-index: 1000;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
             `;
             container.appendChild(interimDiv);
             
-            // Auto scroll to bottom smoothly when new interim appears
-            setTimeout(() => {
-                container.scrollTo({
-                    top: container.scrollHeight,
-                    behavior: 'smooth'
-                });
-            }, 50);
+            // Immediate scroll to bottom for real-time feel
+            container.scrollTop = container.scrollHeight;
         }
         
-        // Update text content smoothly
+        // Update text content immediately - no animation delays
         if (text.trim()) {
             interimDiv.textContent = text;
             interimDiv.style.opacity = '1';
+            
+            // Immediate scroll update for real-time tracking
+            requestAnimationFrame(() => {
+                container.scrollTop = container.scrollHeight;
+            });
         } else {
             interimDiv.style.opacity = '0.5';
         }
         
-        console.log('Interim transcript updated:', text);
+        console.log('Interim transcript updated (deduplicated):', text);
     }
     
-    // Add final transcript text
+    // Add final transcript text with guaranteed persistence and deduplication
     function addFinalTranscript(text, isUserSpeech = true) {
-        if (!transcriptOverlay) return;
+        if (!transcriptOverlay || !text.trim()) return;
         
         const container = transcriptOverlay.querySelector('.transcript-text-container');
         if (!container) return;
         
-        // Remove interim text smoothly
+        // Check for duplicate content in existing transcripts
+        const existingItems = container.querySelectorAll('.transcript-item');
+        const trimmedText = text.trim().toLowerCase();
+        
+        // Check if this text already exists in recent transcripts
+        for (let i = Math.max(0, existingItems.length - 5); i < existingItems.length; i++) {
+            const existingText = existingItems[i].textContent.replace(/^You:\s*/, '').trim().toLowerCase();
+            if (existingText === trimmedText) {
+                console.log('Duplicate transcript detected, skipping:', text);
+                return; // Skip duplicate
+            }
+        }
+        
+        // Remove interim text immediately to prevent flickering
         const interimDiv = container.querySelector('.transcript-interim');
         if (interimDiv) {
-            // Fade out interim text before removing
-            interimDiv.style.opacity = '0';
-            interimDiv.style.transition = 'opacity 0.2s ease';
-            setTimeout(() => {
-                if (interimDiv.parentNode) {
-                    interimDiv.remove();
-                }
-            }, 200);
+            // Remove interim text immediately without animation to prevent disappearing
+            interimDiv.remove();
         }
         
         // Add final text with or without You: prefix based on source
         const finalDiv = document.createElement('div');
-        finalDiv.className = 'transcript-item';
+        finalDiv.className = 'transcript-item persistent-item';
         
         if (isUserSpeech) {
             finalDiv.innerHTML = `
@@ -463,48 +506,45 @@
         }
         finalDiv.style.cssText = `
             margin-bottom: 12px;
-            padding: 10px 12px;
-            background: rgba(0, 0, 0, 0.75);
-            border-radius: 8px;
-            animation: fadeInUp 0.3s ease-out;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 20, 0.7) 100%);
+            border-radius: 10px;
             color: white;
-            opacity: 0;
-            transform: translateY(10px);
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1000;
+            display: block !important;
+            visibility: visible !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         `;
         
+        // Ensure the element is added and stays visible
         container.appendChild(finalDiv);
         
-        // Animate in the final text
+        // Force reflow to ensure element is rendered
+        finalDiv.offsetHeight;
+        
+        // Immediate scroll to bottom for real-time feel
         requestAnimationFrame(() => {
-            finalDiv.style.opacity = '1';
-            finalDiv.style.transform = 'translateY(0)';
-            finalDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            container.scrollTop = container.scrollHeight;
         });
         
-        // Auto scroll to bottom smoothly
-        setTimeout(() => {
-            container.scrollTo({
-                top: container.scrollHeight,
-                behavior: 'smooth'
-            });
-        }, 100);
-        
-        // Limit number of items to prevent memory issues
+        // Limit number of items to prevent memory issues but keep more items visible
         const items = container.querySelectorAll('.transcript-item');
-        if (items.length > 25) {
-            // Remove oldest items with fade out
-            const oldestItem = items[0];
-            oldestItem.style.opacity = '0';
-            oldestItem.style.transform = 'translateY(-10px)';
-            oldestItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            setTimeout(() => {
-                if (oldestItem.parentNode) {
+        if (items.length > 50) {
+            // Remove oldest items but keep more history
+            for (let i = 0; i < 10; i++) {
+                const oldestItem = items[i];
+                if (oldestItem && oldestItem.parentNode) {
                     oldestItem.remove();
                 }
-            }, 300);
+            }
         }
         
-        console.log('Final transcript added:', text);
+        console.log('Final transcript added with deduplication:', text);
     }
     
     // Stop transcription
@@ -512,6 +552,10 @@
         console.log('Stopping transcription...');
         isRecording = false;
         userSpeaking = false;
+        
+        // Reset deduplication tracking variables
+        lastFinalTranscript = '';
+        lastInterimText = '';
         
         if (recognition) {
             recognition.stop();

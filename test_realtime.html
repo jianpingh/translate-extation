@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Transcription Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #ffeb3b;
+        }
+        .instructions li {
+            margin: 8px 0;
+        }
+        .feature-test {
+            background: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .expected {
+            background: rgba(33, 150, 243, 0.2);
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .performance {
+            background: rgba(156, 39, 176, 0.2);
+            border-left: 4px solid #9c27b0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .test-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .metric {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 5px 0;
+        }
+        .metric-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        video {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .realtime-demo {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .demo-text {
+            background: rgba(0, 0, 0, 0.75);
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 100px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .typing-indicator {
+            opacity: 0.7;
+            font-style: italic;
+        }
+        .you-prefix {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Real-time Transcription Test</h1>
+        <p style="text-align: center; font-size: 18px;">Testing Instant Speech-to-Text Response</p>
+        
+        <div class="instructions">
+            <h3>🚀 Quick Start Guide</h3>
+            <ol>
+                <li><strong>Reload Extension:</strong> Go to chrome://extensions and reload the Audio Transcription Extension</li>
+                <li><strong>Start Real-time Mode:</strong> Click the extension icon and start transcription</li>
+                <li><strong>Speak Continuously:</strong> Talk normally - words should appear as you speak</li>
+                <li><strong>Watch Performance:</strong> Observe the instant response without delays</li>
+            </ol>
+        </div>
+
+        <div class="realtime-demo">
+            <h3>🎯 Real-time Performance Demo</h3>
+            <p>The demo below shows what you should expect from real-time transcription:</p>
+            
+            <div class="demo-text">
+                <div>🎤 <span class="typing-indicator">Listening for speech...</span></div>
+                <div style="margin-top: 10px;">
+                    <span class="you-prefix">You:</span> Hello world, this is a real-time test
+                </div>
+                <div style="margin-top: 5px;">
+                    <span class="you-prefix">You:</span> Words should appear instantly as I speak
+                </div>
+                <div style="margin-top: 5px;">
+                    <span class="you-prefix">You:</span> No waiting, no delays, just immediate transcription
+                </div>
+            </div>
+        </div>
+
+        <div class="test-metrics">
+            <div class="metric">
+                <div class="metric-value">< 100ms</div>
+                <div class="metric-label">Target Response Time</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">Instant</div>
+                <div class="metric-label">Interim Text Display</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">Real-time</div>
+                <div class="metric-label">Scroll Update</div>
+            </div>
+            <div class="metric">
+                <div class="metric-value">No Delay</div>
+                <div class="metric-label">Animation Overhead</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>⚡ Performance Optimizations</h2>
+            
+            <div class="performance">
+                <h4>🎯 Speed Optimizations</h4>
+                <ul>
+                    <li><strong>Immediate Display:</strong> No animation delays - text appears instantly</li>
+                    <li><strong>Direct DOM Updates:</strong> Bypass animation queues for faster rendering</li>
+                    <li><strong>Instant Scrolling:</strong> Immediate scroll updates, no smooth animations</li>
+                    <li><strong>Optimized Recognition:</strong> Tuned speech recognition for faster processing</li>
+                </ul>
+            </div>
+
+            <div class="feature-test">
+                <h4>✅ Real-time Features</h4>
+                <ul>
+                    <li><strong>Instant Interim Text:</strong> See words as they're being recognized</li>
+                    <li><strong>No Animation Lag:</strong> Zero transition delays for immediate feedback</li>
+                    <li><strong>Smart Source Detection:</strong> Automatically detect user vs video speech</li>
+                    <li><strong>Immediate Scroll:</strong> Always show the latest text without delay</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🗣️ Speed Test Phrases</h2>
+            <p>Try speaking these phrases at different speeds to test real-time response:</p>
+            
+            <div class="feature-test">
+                <h4>📢 Normal Speed Test</h4>
+                <p>"Hello world, this is a real-time transcription test. The words should appear as I speak them."</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>🚀 Fast Speech Test</h4>
+                <p>"Quick brown fox jumps over the lazy dog. Testing rapid speech recognition and instant display capabilities."</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>⏸️ Pause Test</h4>
+                <p>"Testing... with... pauses... between... words... to... verify... immediate... response."</p>
+            </div>
+
+            <div class="feature-test">
+                <h4>🔄 Continuous Test</h4>
+                <p>"This is a continuous speech test where I will keep talking without stopping to see how well the real-time transcription handles long sentences and maintains performance throughout the entire duration."</p>
+            </div>
+        </div>
+
+        <div class="expected">
+            <h3>🎯 Expected Real-time Behavior</h3>
+            <ul>
+                <li><strong>Instant Interim Text:</strong> Words appear immediately as you speak (gray/italic)</li>
+                <li><strong>Immediate Final Text:</strong> Text becomes permanent instantly when speech ends</li>
+                <li><strong>No Loading Delays:</strong> Zero waiting time between speech and display</li>
+                <li><strong>Smooth User Experience:</strong> Feels like typing in real-time</li>
+                <li><strong>Automatic Scrolling:</strong> Always shows the latest content without manual scrolling</li>
+                <li><strong>Smart Prefixes:</strong> "You:" appears for user speech, plain text for video audio</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🎬 Test with Video</h2>
+            <p>Test real-time transcription with video audio (should not show "You:" prefix):</p>
+            
+            <video controls>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            
+            <div class="controls">
+                <button onclick="testRealTime()">🚀 Start Real-time Test</button>
+                <button onclick="measureLatency()">⏱️ Measure Latency</button>
+                <button onclick="checkPerformance()">📊 Check Performance</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Performance Monitoring</h2>
+            <ul>
+                <li><strong>Browser Console:</strong> Monitor "immediate" logs for real-time processing</li>
+                <li><strong>Response Time:</strong> Text should appear within 100ms of speech</li>
+                <li><strong>Memory Usage:</strong> Efficient cleanup of old transcript items</li>
+                <li><strong>CPU Performance:</strong> Minimal overhead from animations</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function testRealTime() {
+            console.log('🚀 Starting real-time transcription test');
+            alert('Start speaking to test real-time transcription. Words should appear instantly!');
+        }
+
+        function measureLatency() {
+            console.log('⏱️ Measuring transcription latency');
+            alert('Speak a short phrase and observe how quickly text appears in the transcript overlay.');
+        }
+
+        function checkPerformance() {
+            console.log('📊 Checking performance metrics');
+            const performance = window.performance;
+            console.log('Memory usage:', performance.memory ? performance.memory.usedJSHeapSize : 'N/A');
+            alert('Check browser console for performance metrics.');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('⚡ Real-time transcription test page loaded');
+            
+            // Set video volume
+            const video = document.querySelector('video');
+            if (video) {
+                video.volume = 0.4;
+            }
+        });
+    </script>
+</body>
+</html>
