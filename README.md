@@ -1,27 +1,29 @@
-# 音频转文本助手 Chrome 浏览器插件
+# Audio-to-Text Assistant Chrome Extension
 
-这是一个强大的Chrome浏览器插件，可以将在线视频播放和会议中的声音实时转换为文本。
+A powerful Chrome browser extension that can convert audio from online videos and meetings into text in real-time.
 
-## 功能特点
+## Features
 
-🎵 **实时语音转文本** - 支持实时将音频转换为文字
-🌍 **多语言支持** - 支持中文、英文、日文、韩文等多种语言
-📹 **视频网站支持** - 支持YouTube、Bilibili、优酷等主流视频网站
-💼 **会议平台支持** - 支持Google Meet、Zoom、Teams等在线会议平台
-💾 **自动保存** - 自动保存转录文本，支持历史记录查看
-🎨 **美观界面** - 简洁易用的用户界面，支持深色主题
+🎵 **Real-time Speech-to-Text** - Supports real-time conversion of audio to text
+🌍 **Multi-language Support** - Supports Chinese, English, Japanese, Korean and other languages
+📹 **Video Platform Support** - Supports mainstream video platforms like YouTube, Bilibili, Youku, etc.
+💼 **Meeting Platform Support** - Supports online meeting platforms like Google Meet, Zoom, Teams, etc.
+💾 **Auto-save** - Automatically saves transcribed text with history viewing support
+🎨 **Beautiful Interface** - Clean and user-friendly interface with dark theme support
 
-## 支持的网站
+## Supported Websites
 
-### 视频网站
+### Video Platforms
+
 - YouTube
 - Bilibili
-- 优酷 (Youku)
-- 爱奇艺 (iQiyi)
+- Youku
+- iQiyi
 - Netflix
 - Vimeo
 
-### 会议平台
+### Meeting Platforms
+
 - Google Meet
 - Zoom
 - Microsoft Teams
@@ -32,118 +34,127 @@
 - Jitsi Meet
 - BigBlueButton
 
-## 安装方法
+## Installation
 
-1. 下载或克隆此项目到本地
-2. 打开Chrome浏览器，进入扩展程序管理页面 (`chrome://extensions/`)
-3. 开启"开发者模式"
-4. 点击"加载已解压的扩展程序"
-5. 选择项目文件夹
-6. 插件安装完成
+1. Download or clone this project to your local machine
+2. Open Chrome browser and navigate to the extensions management page (`chrome://extensions/`)
+3. Enable "Developer mode"
+4. Click "Load unpacked"
+5. Select the project folder
+6. Extension installation complete
 
-## 使用方法
+## Usage
 
-1. **基本使用**
-   - 点击浏览器工具栏中的插件图标
-   - 选择转录语言
-   - 点击"开始转录"按钮
-   - 浏览器会请求麦克风权限，点击"允许"
-   - 开始播放视频或参加会议，插件会自动转录音频
+1. **Basic Usage**
+   - Click the extension icon in the browser toolbar
+   - Select transcription language
+   - Click the "Start Transcription" button
+   - Browser will request microphone permission, click "Allow"
+   - Start playing videos or join meetings, the extension will automatically transcribe audio
 
-2. **语言设置**
-   - 在弹出窗口中选择合适的语言
-   - 支持：中文(简体)、中文(繁体)、英语、日语、韩语等
+2. **Language Settings**
+   - Select appropriate language in the popup window
+   - Supports: Simplified Chinese, Traditional Chinese, English, Japanese, Korean, etc.
 
-3. **查看转录文本**
-   - 转录的文本会实时显示在插件窗口中
-   - 每条文本都带有时间戳
-   - 可以点击"清空文本"清除当前内容
+3. **View Transcribed Text**
+   - Transcribed text will be displayed in real-time in the extension window
+   - Each text entry includes a timestamp
+   - Click "Clear Text" to clear current content
 
-4. **停止转录**
-   - 点击"停止转录"按钮结束转录
-   - 转录文本会自动保存
+4. **Stop Transcription**
+   - Click "Stop Transcription" button to end transcription
+   - Transcribed text will be automatically saved
 
-## 权限说明
+## Permissions
 
-此插件需要以下权限：
+This extension requires the following permissions:
 
-- **麦克风访问权限** - 用于捕获音频进行语音识别
-- **标签页访问权限** - 用于在网页中注入转录功能
-- **存储权限** - 用于保存设置和转录历史
+- **Microphone Access Permission** - Used to capture audio for speech recognition
+- **Tab Access Permission** - Used to inject transcription functionality into web pages
+- **Storage Permission** - Used to save settings and transcription history
 
-## 技术原理
+## Technical Implementation
 
-- 使用 Web Speech API 进行语音识别
-- 支持连续识别和实时结果
-- 通过 Content Script 注入页面功能
-- 使用 Chrome Extension API 进行跨页面通信
+- Uses Web Speech API for speech recognition
+- Supports continuous recognition and real-time results
+- Injects page functionality through Content Script
+- Uses Chrome Extension API for cross-page communication
 
-## 文件结构
+## File Structure
 
-```
+```text
 translate-extation/
-├── manifest.json          # 插件清单文件
-├── popup.html             # 弹出窗口HTML
-├── popup.js               # 弹出窗口脚本
-├── content.js             # 内容脚本
-├── background.js          # 后台脚本
-├── injected.js            # 注入页面的脚本
-├── styles.css             # 样式文件
-├── icons/                 # 图标文件夹
-└── README.md              # 说明文档
+├── manifest.json          # Extension manifest file
+├── popup.html             # Popup window HTML
+├── popup.js               # Popup window script
+├── content.js             # Content script
+├── background.js          # Background script
+├── injected.js            # Injected page script
+├── styles.css             # Style file
+├── icons/                 # Icons folder
+└── README.md              # Documentation
 ```
 
-## 常见问题
+## FAQ
 
-### Q: 为什么无法识别音频？
-A: 请确保：
-1. 浏览器已授予麦克风权限
-2. 所在网站支持音频捕获
-3. 音频设备工作正常
+### Q: Why can't audio be recognized?
 
-### Q: 识别准确率不高怎么办？
-A: 建议：
-1. 确保音频清晰，减少背景噪音
-2. 选择正确的语言设置
-3. 说话速度适中，吐字清晰
+A: Please ensure:
 
-### Q: 支持离线使用吗？
-A: 本插件使用浏览器内置的语音识别API，需要网络连接才能工作。
+1. Browser has granted microphone permission
+2. The website supports audio capture
+3. Audio devices are working properly
 
-## 开发说明
+### Q: What to do if recognition accuracy is low?
 
-### 环境要求
-- Chrome 88+ 浏览器
-- 支持 Manifest V3 的扩展程序格式
+A: Suggestions:
 
-### 开发模式
-1. 修改代码后，在扩展程序管理页面点击"重新加载"
-2. 使用浏览器开发者工具调试
+1. Ensure audio is clear and reduce background noise
+2. Select the correct language setting
+3. Speak at moderate speed with clear pronunciation
 
-### 代码结构
-- `manifest.json` - 定义插件配置和权限
-- `popup.*` - 用户界面相关文件
-- `content.js` - 页面内容脚本，负责音频捕获和识别
-- `background.js` - 后台服务，处理插件生命周期
-- `injected.js` - 注入页面的脚本，用于监听媒体元素
+### Q: Does it support offline use?
 
-## 更新日志
+A: This extension uses the browser's built-in speech recognition API and requires an internet connection to work.
+
+## Development Guide
+
+### Requirements
+
+- Chrome 88+ browser
+- Extension format that supports Manifest V3
+
+### Development Mode
+
+1. After modifying code, click "Reload" on the extensions management page
+2. Use browser developer tools for debugging
+
+### Code Structure
+
+- `manifest.json` - Defines extension configuration and permissions
+- `popup.*` - User interface related files
+- `content.js` - Page content script, responsible for audio capture and recognition
+- `background.js` - Background service, handles extension lifecycle
+- `injected.js` - Script injected into pages, used to monitor media elements
+
+## Changelog
 
 ### v1.0.0 (2025-07-20)
-- 首次发布
-- 支持基本的语音转文本功能
-- 支持多语言识别
-- 支持主流视频和会议网站
-- 自动保存转录历史
 
-## 许可证
+- Initial release
+- Basic speech-to-text functionality support
+- Multi-language recognition support
+- Support for mainstream video and meeting platforms
+- Auto-save transcription history
+
+## License
 
 MIT License
 
-## 贡献
+## Contributing
 
-欢迎提交Issue和Pull Request来改进这个项目！
+Welcome to submit Issues and Pull Requests to improve this project!
 
-## 联系方式
+## Contact
 
-如有问题或建议，请通过GitHub Issues联系。
+If you have questions or suggestions, please contact us through GitHub Issues.
