@@ -100,63 +100,50 @@
             
             console.log('Speech recognition instance created with real-time optimizations, language:', language);
             
-            // Listen for recognition results with cumulative word display
+            // Listen for recognition results with proper order handling
             recognition.onresult = function(event) {
                 console.log('Recognition result event triggered, results count:', event.results.length);
-                let finalTranscript = '';
-                let interimTranscript = '';
-                // Process results immediately for real-time display
-                let hasNewContent = false;
                 
-                // Build cumulative transcript from all results
-                let cumulativeInterim = '';
-                let cumulativeFinal = '';
+                // Process only the latest interim result for real-time display
+                let latestInterimText = '';
+                let newFinalTranscript = '';
                 
-                // Process all results to build cumulative text
-                for (let i = 0; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    const confidence = event.results[i][0].confidence;
-                    
-                    console.log('Result', i, '- Final:', event.results[i].isFinal, 'Text:', transcript, 'Confidence:', confidence);
-                    
-                    if (event.results[i].isFinal) {
-                        cumulativeFinal += transcript;
-                    } else {
-                        // For interim results, build cumulative text
-                        cumulativeInterim += transcript;
+                // Find the latest interim result (non-final)
+                for (let i = event.results.length - 1; i >= 0; i--) {
+                    if (!event.results[i].isFinal && event.results[i][0].transcript.trim()) {
+                        latestInterimText = event.results[i][0].transcript;
+                        console.log('Latest interim result:', latestInterimText);
+                        break;
                     }
                 }
                 
-                // Process only new final results to prevent duplication
+                // Process only new final results from the current event
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                        hasNewContent = true;
+                        const finalText = event.results[i][0].transcript;
+                        newFinalTranscript += finalText;
+                        console.log('New final result:', finalText);
                     }
                 }
                 
-                // Show cumulative interim text (all previous + current)
-                if (cumulativeInterim.trim()) {
-                    // Combine any existing final text with new interim
-                    const fullInterimText = cumulativeFinal + cumulativeInterim;
-                    if (fullInterimText !== lastInterimText) {
-                        console.log('Cumulative interim transcript:', fullInterimText);
-                        updateInterimTranscript(fullInterimText);
-                    }
+                // Update interim display with latest text
+                if (latestInterimText && latestInterimText !== lastInterimText) {
+                    console.log('Updating interim display:', latestInterimText);
+                    updateInterimTranscript(latestInterimText);
                 }
                 
-                // Check for duplicate final transcripts
-                if (finalTranscript.trim() && finalTranscript !== lastFinalTranscript) {
-                    console.log('New final transcript (cumulative):', finalTranscript, 'User speaking:', userSpeaking);
-                    lastFinalTranscript = finalTranscript;
+                // Process final transcript if we have new content
+                if (newFinalTranscript.trim() && newFinalTranscript !== lastFinalTranscript) {
+                    console.log('Processing new final transcript:', newFinalTranscript, 'User speaking:', userSpeaking);
+                    lastFinalTranscript = newFinalTranscript;
                     
-                    // Add final transcript with guaranteed persistence
-                    addFinalTranscript(cumulativeFinal, userSpeaking);
+                    // Add final transcript in correct order
+                    addFinalTranscript(newFinalTranscript, userSpeaking);
                     
                     // Send to popup (if open) - non-blocking
                     chrome.runtime.sendMessage({
                         action: 'transcriptUpdate',
-                        text: finalTranscript,
+                        text: newFinalTranscript,
                         isFinal: true
                     }).catch(() => {
                         // Popup might be closed, ignore error
@@ -420,7 +407,7 @@
         console.log('Status updated:', message);
     }
     
-    // Update interim transcript with true word-by-word append (在同一句子后面追加新单词)
+    // Update interim transcript with true word-by-word append (单词逐个出现且不消失)
     function updateInterimTranscript(text) {
         if (!transcriptOverlay) return;
         
@@ -463,7 +450,7 @@
         // Parse new words from the text
         const newWords = text.trim().split(' ').filter(w => w.length > 0);
         
-        // Check if we need to append or replace
+        // Always append new words, never replace or remove existing ones during interim
         if (newWords.length > currentInterimWords.length) {
             // Check if new text starts with current words (可以追加)
             let canAppend = true;
@@ -475,27 +462,29 @@
             }
             
             if (canAppend) {
-                // Append only the new words
+                // Append only the new words (单词逐个出现)
                 for (let i = currentInterimWords.length; i < newWords.length; i++) {
                     const newWord = newWords[i];
                     
                     // Create word element with animation
                     const wordSpan = document.createElement('span');
-                    wordSpan.textContent = (i > 0 ? ' ' : '') + newWord;
+                    wordSpan.textContent = (currentInterimWords.length > 0 ? ' ' : '') + newWord;
                     wordSpan.style.cssText = `
                         display: inline;
                         animation: fadeIn 0.3s ease-in;
                         margin-right: 2px;
+                        opacity: 1;
                     `;
                     
-                    // Append to the interim div
+                    // Append to the interim div (不消失)
                     interimDiv.appendChild(wordSpan);
                     currentInterimWords.push(newWord);
                     
-                    console.log('Appended new word:', newWord);
+                    console.log('New word appeared:', newWord);
                 }
             } else {
-                // Replace entire content if can't append
+                // Only replace if text structure is completely different
+                console.log('Text structure changed, replacing interim content');
                 interimDiv.innerHTML = '';
                 currentInterimWords = [];
                 
@@ -507,74 +496,29 @@
                         display: inline;
                         animation: fadeIn 0.3s ease-in;
                         margin-right: 2px;
+                        opacity: 1;
                     `;
                     interimDiv.appendChild(wordSpan);
                     currentInterimWords.push(word);
                 }
-                console.log('Replaced entire interim text:', text);
             }
-        } else if (newWords.length < currentInterimWords.length) {
-            // Text is shorter, likely a correction - replace entirely
-            interimDiv.innerHTML = '';
-            currentInterimWords = [];
-            
-            for (let i = 0; i < newWords.length; i++) {
-                const word = newWords[i];
-                const wordSpan = document.createElement('span');
-                wordSpan.textContent = (i > 0 ? ' ' : '') + word;
-                wordSpan.style.cssText = `
-                    display: inline;
-                    margin-right: 2px;
-                `;
-                interimDiv.appendChild(wordSpan);
-                currentInterimWords.push(word);
-            }
-            console.log('Corrected interim text (shorter):', text);
         } else {
-            // Same length, check for word changes
-            let hasChanges = false;
-            for (let i = 0; i < newWords.length; i++) {
-                if (currentInterimWords[i] !== newWords[i]) {
-                    hasChanges = true;
-                    break;
-                }
-            }
-            
-            if (hasChanges) {
-                // Replace content due to word changes
-                interimDiv.innerHTML = '';
-                currentInterimWords = [];
-                
-                for (let i = 0; i < newWords.length; i++) {
-                    const word = newWords[i];
-                    const wordSpan = document.createElement('span');
-                    wordSpan.textContent = (i > 0 ? ' ' : '') + word;
-                    wordSpan.style.cssText = `
-                        display: inline;
-                        margin-right: 2px;
-                    `;
-                    interimDiv.appendChild(wordSpan);
-                    currentInterimWords.push(word);
-                }
-                console.log('Updated interim text (word changes):', text);
-            }
+            // For shorter text or corrections, only update if significantly different
+            // This prevents words from disappearing during interim phase
+            console.log('Keeping existing interim words to prevent disappearing');
         }
         
         lastInterimText = text;
         
         // Ensure visibility
-        if (text.trim()) {
-            interimDiv.style.opacity = '1';
-        } else {
-            interimDiv.style.opacity = '0.7';
-        }
+        interimDiv.style.opacity = '1';
         
         // Immediate scroll update for real-time tracking
         requestAnimationFrame(() => {
             container.scrollTop = container.scrollHeight;
         });
         
-        console.log('Current interim words:', currentInterimWords);
+        console.log('Current interim words (never disappear):', currentInterimWords);
     }
     
     // Add final transcript text with true cumulative display (preserve all words)
@@ -584,30 +528,34 @@
         const container = transcriptOverlay.querySelector('.transcript-text-container');
         if (!container) return;
         
-        // Check for duplicate content in existing transcripts
+        // Enhanced duplicate check for final text to prevent any repetition
         const existingItems = container.querySelectorAll('.transcript-item');
         const trimmedText = text.trim().toLowerCase();
         
-        // Check if this text already exists in recent transcripts
+        // Check last few items more thoroughly to prevent repetition
         for (let i = Math.max(0, existingItems.length - 3); i < existingItems.length; i++) {
             const existingText = existingItems[i].textContent.replace(/^You:\s*/, '').trim().toLowerCase();
             if (existingText === trimmedText) {
-                console.log('Duplicate transcript detected, skipping:', text);
-                return; // Skip duplicate
+                console.log('Exact duplicate in final text, skipping:', text);
+                return; // Skip exact duplicates
+            }
+            // Also check if new text is completely contained in existing text
+            if (existingText.includes(trimmedText) && trimmedText.length > 3) {
+                console.log('Final text already contained in existing item, skipping:', text);
+                return;
             }
         }
         
-        // Convert interim text to final text style while preserving all content
+        // Convert interim text to final text style without duplicating content
         const interimDiv = container.querySelector('.transcript-interim');
         if (interimDiv) {
-            // Get the current interim text content to preserve cumulative words
-            const currentInterimText = interimDiv.textContent || interimDiv.innerText || '';
-            const finalText = text.trim() || currentInterimText.trim();
+            // Use only the new final text, don't accumulate with interim content
+            const finalText = text.trim();
             
             // Transform interim element to final text style
             interimDiv.className = 'transcript-item persistent-item final-converted';
             
-            // Update content with proper prefix, preserving cumulative text
+            // Update content with only the final text (no duplication)
             if (isUserSpeech) {
                 interimDiv.innerHTML = `
                     <div class="transcript-text"><span style="color: #4CAF50; font-weight: 600;">You:</span> ${finalText}</div>
@@ -638,7 +586,11 @@
                 border-left: none;
             `;
             
-            console.log('Interim text converted to final (cumulative preserved):', finalText);
+            // Clear interim tracking state since it's now final
+            currentInterimWords = [];
+            lastInterimText = '';
+            
+            console.log('Interim text converted to final (no duplication):', finalText);
         } else {
             // Create new final text if no interim exists
             const finalDiv = document.createElement('div');
@@ -671,27 +623,34 @@
             `;
             
             container.appendChild(finalDiv);
-            console.log('New final transcript added (cumulative):', text);
+            
+            // Clear interim tracking state for next round
+            currentInterimWords = [];
+            lastInterimText = '';
+            
+            console.log('New final transcript added in correct order:', text);
         }
         
-        // Immediate scroll to bottom for real-time feel
+        // Immediate scroll to bottom to maintain order visibility
         requestAnimationFrame(() => {
             container.scrollTop = container.scrollHeight;
+            console.log('Scrolled to show latest transcript in order');
         });
         
-        // Limit number of items to prevent memory issues but keep more items visible
+        // Limit number of items to prevent memory issues
         const items = container.querySelectorAll('.transcript-item');
         if (items.length > 50) {
-            // Remove oldest items but keep more history
+            // Remove oldest items but keep display order intact
             for (let i = 0; i < 10; i++) {
                 const oldestItem = items[i];
                 if (oldestItem && oldestItem.parentNode) {
                     oldestItem.remove();
                 }
             }
+            console.log('Cleaned up old items while preserving order');
         }
         
-        console.log('Final transcript processed (all words preserved):', text);
+        console.log('Final transcript processed (no content duplication):', text);
     }
     
     // Stop transcription
@@ -730,28 +689,6 @@
         
         console.log('Transcription stopped');
     }
-    
-    // Test speech recognition availability
-    function testSpeechRecognition() {
-        if (SpeechRecognition) {
-            console.log('Speech Recognition API is available');
-            console.log('Supported languages might include: en-US, zh-CN, ja-JP, ko-KR, etc.');
-            
-            // Test basic functionality
-            try {
-                const testRecognition = new SpeechRecognition();
-                console.log('Speech recognition instance created successfully');
-                testRecognition = null;
-            } catch (error) {
-                console.error('Failed to create speech recognition instance:', error);
-            }
-        } else {
-            console.error('Speech Recognition API is not available in this browser');
-        }
-    }
-    
-    // Run test on load
-    testSpeechRecognition();
     
     console.log('Content script initialization complete');
     
